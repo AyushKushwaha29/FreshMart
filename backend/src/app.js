@@ -29,7 +29,7 @@ const __dirname = path.dirname(__filename);
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL?.split(",").map((origin) => origin.trim()) || ["http://localhost:5173"],
+    origin: true,
     credentials: true
   })
 );
