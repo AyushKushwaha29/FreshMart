@@ -2,6 +2,8 @@ import Order from "../models/Order.js";
 import Payment from "../models/Payment.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { buildCheckoutPayload, createOrderFromSnapshot } from "../services/orderService.js";
+import { getIO } from "../socket.js";
+
 
 export const placeCodOrder = asyncHandler(async (req, res) => {
   const { addressId, couponCode } = req.body;
@@ -34,6 +36,15 @@ export const placeCodOrder = asyncHandler(async (req, res) => {
       pricing: payload.pricing
     }
   });
+getIO().to("admins").emit("new-order", {
+  orderId: order.orderId,
+  customer: req.user.name,
+  amount: order.pricing.total,
+  status: order.status,
+  createdAt: order.createdAt
+});
+
+
 
   res.status(201).json({
     success: true,

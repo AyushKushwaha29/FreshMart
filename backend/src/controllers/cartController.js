@@ -4,7 +4,14 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { buildCartSummary, getOrCreateCart } from "../services/cartService.js";
 import { getValidCoupon } from "../services/couponService.js";
 
-const populateCart = (cart) => cart.populate("items.product").populate("coupon");
+// const populateCart = (cart) => cart.populate("items.product").populate("coupon");
+const populateCart = async (cart) => {
+  await cart.populate([
+    { path: "items.product" },
+    { path: "coupon" }
+  ]);
+  return cart;
+};
 
 export const getCart = asyncHandler(async (req, res) => {
   const summary = await buildCartSummary(req.user._id);

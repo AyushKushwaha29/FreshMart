@@ -3,6 +3,9 @@ import User from "../models/User.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
 export const protect = asyncHandler(async (req, _res, next) => {
+  console.log("===== AUTH CHECK =====");
+  console.log("Authorization Header:", req.headers.authorization);
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {

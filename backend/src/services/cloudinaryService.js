@@ -9,7 +9,20 @@ const __dirname = path.dirname(__filename);
 const sanitizeFilename = (filename) => filename.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9._-]/g, "");
 
 const hasCloudinaryConfig = () => {
-  return Boolean(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+  const {
+    CLOUDINARY_CLOUD_NAME,
+    CLOUDINARY_API_KEY,
+    CLOUDINARY_API_SECRET
+  } = process.env;
+
+  return (
+    CLOUDINARY_CLOUD_NAME &&
+    CLOUDINARY_API_KEY &&
+    CLOUDINARY_API_SECRET &&
+    CLOUDINARY_CLOUD_NAME !== "xxxxxxxxxx" &&
+    CLOUDINARY_API_KEY !== "xxxxxxxxxx" &&
+    CLOUDINARY_API_SECRET !== "xxxxxxxxxx"
+  );
 };
 
 const uploadBuffer = (buffer, options) =>

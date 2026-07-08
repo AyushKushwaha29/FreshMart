@@ -13,15 +13,27 @@ const seed = async () => {
 
   await Promise.all([Category.deleteMany({}), Product.deleteMany({}), Coupon.deleteMany({})]);
 
-  const createdCategories = await Category.insertMany(categories);
+  // const createdCategories = await Category.insertMany(categories);
+  const createdCategories = [];
+
+for (const category of categories) {
+  const created = await Category.create(category);
+  createdCategories.push(created);
+}
   const categoryMap = new Map(createdCategories.map((category) => [category.name, category._id]));
 
-  await Product.insertMany(
-    products.map((product) => ({
-      ...product,
-      category: categoryMap.get(product.categoryName)
-    }))
-  );
+  // await Product.insertMany(
+  //   products.map((product) => ({
+  //     ...product,
+  //     category: categoryMap.get(product.categoryName)
+  //   }))
+  // );
+  for (const product of products) {
+  await Product.create({
+    ...product,
+    category: categoryMap.get(product.categoryName)
+  });
+  }
 
   const now = new Date();
   const endsAt = new Date();

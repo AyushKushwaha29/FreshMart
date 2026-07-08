@@ -5,11 +5,14 @@ import EmptyState from "../components/ui/EmptyState";
 import StatusBadge from "../components/ui/StatusBadge";
 import api, { getErrorMessage } from "../services/api";
 import { currency, shortDate } from "../utils/formatters";
+import { socket } from "../services/socket";
+import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const { user } = useAuth();
   useEffect(() => {
     const loadOrders = async () => {
       setLoading(true);
@@ -25,6 +28,33 @@ export default function OrdersPage() {
 
     loadOrders();
   }, []);
+useEffect(() => {
+  if (!user?._id) return;
+
+  socket.emit("join-user", user._id);
+
+  const handleStatusUpdate = (data) => {
+    toast.success(`🎉 Order ${data.orderId} is now ${data.status}`);
+
+    setOrders((prev) =>
+      prev.map((order) =>
+        order.orderId === data.orderId
+          ? {
+              ...order,
+              status: data.status,
+              paymentStatus: data.paymentStatus
+            }
+          : order
+      )
+    );
+  };
+
+  socket.on("order-status-updated", handleStatusUpdate);
+
+  return () => {
+    socket.off("order-status-updated", handleStatusUpdate);
+  };
+}, [user]);
 
   if (!loading && !orders.length) {
     return (
@@ -59,9 +89,17 @@ export default function OrdersPage() {
                   {order.invoiceUrl && (
                     <a className="inline-flex items-center gap-2 text-sm font-semibold text-brand-700" href={order.invoiceUrl} rel="noreferrer" target="_blank">
                       Invoice
+                      
                       <ExternalLink className="h-4 w-4" />
                     </a>
+                    
                   )}
+                  <Link
+                       to={`/orders/${order._id}`}
+                        className="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
+                          >
+                         Track Order
+                      </Link>
                 </div>
               </div>
               <div className="mt-5 grid gap-3 md:grid-cols-2">

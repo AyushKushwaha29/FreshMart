@@ -6,6 +6,7 @@ import razorpay from "../config/razorpay.js";
 import { buildCheckoutPayload, createOrderFromSnapshot } from "../services/orderService.js";
 
 export const createRazorpayOrder = asyncHandler(async (req, res) => {
+
   const { addressId, couponCode } = req.body;
   const payload = await buildCheckoutPayload({
     userId: req.user._id,
@@ -15,7 +16,19 @@ export const createRazorpayOrder = asyncHandler(async (req, res) => {
 
   let razorpayOrder;
 
+  // if (razorpay) {
+  //   razorpayOrder = await razorpay.orders.create({
+  //     amount: Math.round(payload.pricing.total * 100),
+  //     currency: "INR",
+  //     receipt: `fm-${Date.now()}`,
+  //     notes: {
+  //       userId: String(req.user._id),
+  //       addressId
+  //     }
+  //   });
+  // }
   if (razorpay) {
+  try {
     razorpayOrder = await razorpay.orders.create({
       amount: Math.round(payload.pricing.total * 100),
       currency: "INR",
@@ -25,7 +38,16 @@ export const createRazorpayOrder = asyncHandler(async (req, res) => {
         addressId
       }
     });
-  } else {
+
+    console.log("ORDER CREATED:", razorpayOrder);
+
+  } catch (err) {
+    console.error("RAZORPAY ERROR:");
+    console.error(err);
+    throw err;
+  }
+}
+   else {
     razorpayOrder = {
       id: `order_mock_${Date.now()}`,
       amount: Math.round(payload.pricing.total * 100),
@@ -61,7 +83,12 @@ export const createRazorpayOrder = asyncHandler(async (req, res) => {
 });
 
 export const verifyRazorpayPayment = asyncHandler(async (req, res) => {
+
+  console.log("============== VERIFY HIT ==============");
+  console.log(req.body);
+
   const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
+
   const paymentRecord = await Payment.findOne({
     providerOrderId: razorpayOrderId,
     user: req.user._id

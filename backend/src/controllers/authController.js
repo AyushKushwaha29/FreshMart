@@ -4,39 +4,53 @@ import { normalizeMobile } from "../utils/orderHelpers.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { issueOtp, verifyOtp } from "../services/otpService.js";
 import { sendOtpSms } from "../services/smsService.js";
+import { sendOtpEmail } from "../services/emailService.js";
 
 export const requestOtp = asyncHandler(async (req, res) => {
-  const mobile = normalizeMobile(req.body.mobile);
+  const email = req.body.email?.trim().toLowerCase();
   const name = req.body.name?.trim() || "FreshMart Customer";
 
-  let user = await User.findOne({ mobile });
+  let user = await User.findOne({ email });
 
   if (!user) {
-    user = await User.create({
-      mobile,
-      name
-    });
+  user = await User.create({
+  email,
+  name
+});
   } else if (!user.name && name) {
     user.name = name;
     await user.save();
   }
 
   const otp = await issueOtp(user);
-  await sendOtpSms({ mobile, otp, name: user.name });
+  await sendOtpEmail({
+  email,
+  otp,
+  name: user.name
+});
 
   res.status(200).json({
     success: true,
     message: "OTP sent successfully",
-    devOtp: process.env.NODE_ENV === "production" ? undefined : otp
-  });
+    });
 });
 
 export const verifyOtpAndLogin = asyncHandler(async (req, res) => {
-  const mobile = normalizeMobile(req.body.mobile);
-  const otp = String(req.body.otp || "");
-  const name = req.body.name?.trim();
+const email = req.body.email?.trim().toLowerCase();
+const otp = req.body.otp?.trim();
+const name = req.body.name?.trim() || "FreshMart Customer";
 
-  const user = await User.findOne({ mobile });
+if (!email) {
+  const error = new Error("Email is required");
+  error.statusCode = 400;
+  throw error;
+}if (!otp) {
+  const error = new Error("OTP is required");
+  error.statusCode = 400;
+  throw error;
+}
+
+let user = await User.findOne({ email });
 
   if (!user) {
     const error = new Error("User not found");
@@ -45,6 +59,8 @@ export const verifyOtpAndLogin = asyncHandler(async (req, res) => {
   }
 
   const isValid = await verifyOtp(user, otp);
+    console.log("Request Body:", req.body);
+    console.log("OTP:", otp);
 
   if (!isValid) {
     const error = new Error("Invalid or expired OTP");
@@ -109,8 +125,21 @@ export const getProfile = asyncHandler(async (req, res) => {
 
 export const updateProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
-  user.name = req.body.name?.trim() || user.name;
-  user.email = req.body.email?.trim().toLowerCase() || user.email;
+
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  user.name = req.body.name || user.name;
+
+  // 🔒 Email change nahi hone dena
+
+  if (req.body.mobile) {
+    user.mobile = req.body.mobile;
+  }
+
   await user.save();
 
   res.status(200).json({

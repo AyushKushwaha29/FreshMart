@@ -1,15 +1,31 @@
 import { body, param } from "express-validator";
 
+export const emailValidator = body("email")
+  .trim()
+  .isEmail()
+  .withMessage("Please provide a valid email address")
+  .normalizeEmail();
+
+export const requestOtpValidator = [
+  body("name")
+    .trim()
+    .notEmpty()
+    .withMessage("Name is required"),
+
+  emailValidator
+];
+
 export const mobileValidator = body("mobile")
   .trim()
   .matches(/^\d{10}$/)
   .withMessage("Please provide a valid 10 digit mobile number");
-
-export const requestOtpValidator = [mobileValidator];
-
 export const verifyOtpValidator = [
-  mobileValidator,
-  body("otp").trim().isLength({ min: 6, max: 6 }).withMessage("OTP must be 6 digits")
+  emailValidator,
+
+  body("otp")
+    .trim()
+    .isLength({ min: 6, max: 6 })
+    .withMessage("OTP must be 6 digits")
 ];
 
 export const adminLoginValidator = [

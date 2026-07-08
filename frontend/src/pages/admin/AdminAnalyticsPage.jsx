@@ -1,13 +1,43 @@
+
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  Legend
+} from "recharts";
+
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import StatCard from "../../components/admin/StatCard";
 import api, { getErrorMessage } from "../../services/api";
 import { currency } from "../../utils/formatters";
 
+
+const COLORS = [
+  "#16a34a",
+  "#2563eb",
+  "#f97316",
+  "#e11d48",
+  "#9333ea"
+];
+
+
 export default function AdminAnalyticsPage() {
   const [analytics, setAnalytics] = useState({ dailySales: [], topProducts: [] });
   const [revenue, setRevenue] = useState([]);
-
+  const paymentData = revenue.map((item) => ({
+  name: item._id,
+  value: item.total
+}));
   useEffect(() => {
     const loadAnalytics = async () => {
       try {
@@ -36,23 +66,41 @@ export default function AdminAnalyticsPage() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <div className="glass-panel rounded-[2.5rem] p-6">
-          <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-white">Daily sales</h2>
-          <div className="mt-6 space-y-4">
-            {analytics.dailySales.map((entry) => (
-              <div className="rounded-4xl bg-white/70 p-4 dark:bg-slate-900/60" key={entry._id}>
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-semibold text-slate-900 dark:text-white">{entry._id}</p>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">{entry.orders} orders</p>
-                </div>
-                <div className="mt-3 h-3 rounded-full bg-slate-100 dark:bg-slate-800">
-                  <div className="h-3 rounded-full bg-brand-600" style={{ width: `${Math.min(100, entry.revenue / 20)}%` }} />
-                </div>
-                <p className="mt-3 text-sm font-semibold text-brand-700 dark:text-brand-200">{currency(entry.revenue)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="glass-panel rounded-[2.5rem] p-6">
+
+  <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-white">
+    Revenue Trend
+  </h2>
+
+  <div className="mt-6 h-[350px]">
+
+    <ResponsiveContainer width="100%" height="100%">
+
+      <LineChart data={analytics.dailySales}>
+
+        <CartesianGrid strokeDasharray="3 3" />
+
+        <XAxis dataKey="_id" />
+
+        <YAxis />
+
+        <Tooltip />
+
+        <Line
+          type="monotone"
+          dataKey="revenue"
+          stroke="#16a34a"
+          strokeWidth={4}
+        />
+
+      </LineChart>
+
+    </ResponsiveContainer>
+
+  </div>
+
+</div>
+</div>
 
         <div className="glass-panel rounded-[2.5rem] p-6">
           <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-white">Top products</h2>
@@ -71,6 +119,6 @@ export default function AdminAnalyticsPage() {
           </div>
         </div>
       </div>
-    </div>
+    
   );
 }

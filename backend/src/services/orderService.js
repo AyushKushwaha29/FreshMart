@@ -10,6 +10,8 @@ import { buildOrderId } from "../utils/orderHelpers.js";
 import { getValidCoupon } from "./couponService.js";
 import { generateInvoice } from "./invoiceService.js";
 import { sendOrderConfirmationSms } from "./smsService.js";
+import { sendOrderConfirmationEmail } from "./emailService.js";
+
 
 const assertInventory = async (items) => {
   const products = await Product.find({
@@ -132,27 +134,44 @@ export const createOrderFromSnapshot = async ({
 
   const user = await User.findById(userId);
 
-  const [invoiceResult] = await Promise.allSettled([generateInvoice(order)]);
-  if (invoiceResult.status === "fulfilled") {
-    order.invoiceUrl = invoiceResult.value;
-    await order.save();
-  }
+try {
+  console.log("Generating invoice...");
 
-  await Promise.allSettled([
-    sendOrderConfirmationSms({
-      mobile: user.mobile,
-      name: user.name,
-      orderId: order.orderId,
-      amount: order.pricing.total
-    }),
-    Cart.findOneAndUpdate(
-      { user: userId },
-      {
-        items: [],
-        $unset: { coupon: 1 }
-      }
-    )
-  ]);
+  const invoiceUrl = await generateInvoice(order);
+
+  console.log("Invoice Generated:", invoiceUrl);
+
+  order.invoiceUrl = invoiceUrl;
+  await order.save();
+
+  console.log("Invoice saved in DB");
+} catch (err) {
+  console.error("INVOICE ERROR:");
+  console.error(err);
+}
+
+await Promise.allSettled([
+  sendOrderConfirmationSms({
+    mobile: user.mobile,
+    name: user.name,
+    orderId: order.orderId,
+    amount: order.pricing.total
+  }),
+
+  sendOrderConfirmationEmail({
+    email: user.email,
+    name: user.name,
+    order
+  }),
+
+  Cart.findOneAndUpdate(
+    { user: userId },
+    {
+      items: [],
+      $unset: { coupon: 1 }
+    }
+  )
+]);
 
   return order;
 };

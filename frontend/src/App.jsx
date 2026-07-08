@@ -20,6 +20,10 @@ import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import AdminCustomersPage from "./pages/admin/AdminCustomersPage";
 import AdminCouponsPage from "./pages/admin/AdminCouponsPage";
 import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
+import TrackOrderPage from "./pages/TrackOrderPage";
+
+
+
 
 export default function App() {
   return (
@@ -27,6 +31,7 @@ export default function App() {
       <Route element={<MainLayout />}>
         <Route index element={<HomePage />} />
         <Route element={<ProtectedRoute />}>
+        <Route path="/orders/:id" element={<TrackOrderPage />} />
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />

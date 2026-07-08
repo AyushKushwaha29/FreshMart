@@ -41,12 +41,15 @@ export default function ProfilePage() {
     loadAddresses();
   }, []);
 
-  useEffect(() => {
-    setProfile({
-      name: user?.name || "",
-      email: user?.email || ""
-    });
-  }, [user]);
+useEffect(() => {
+  if (!user) return;
+
+  setProfile({
+    name: user.name || "",
+    email: user.email || "",
+    mobile: user.mobile || ""
+  });
+}, [user]);
 
   const saveProfile = async (event) => {
     event.preventDefault();
@@ -91,8 +94,22 @@ export default function ProfilePage() {
           <h1 className="font-display text-3xl font-bold text-slate-900 dark:text-white">Profile</h1>
           <form className="mt-6 space-y-4" onSubmit={saveProfile}>
             <Input label="Full name" onChange={(event) => setProfile((current) => ({ ...current, name: event.target.value }))} value={profile.name} />
-            <Input label="Email" onChange={(event) => setProfile((current) => ({ ...current, email: event.target.value }))} type="email" value={profile.email} />
-            <Input disabled label="Mobile number" value={user?.mobile || ""} />
+           <Input
+  label="Email"
+  type="email"
+  value={profile.email}
+  readOnly
+/>
+            <Input
+  label="Mobile number"
+  value={profile.mobile}
+  onChange={(event) =>
+    setProfile((current) => ({
+      ...current,
+      mobile: event.target.value
+    }))
+  }
+/>
             <Button className="w-full" loading={loading} type="submit">
               Save profile
             </Button>
