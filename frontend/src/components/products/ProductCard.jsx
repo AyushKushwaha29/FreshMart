@@ -5,11 +5,17 @@ import { currency } from "../../utils/formatters";
 
 export default function ProductCard({ product, onAddToCart, onToggleWishlist, wished = false }) {
   return (
-    <div className="card-hover overflow-hidden rounded-4xl border border-white/60 bg-white/90 p-4 shadow-soft dark:border-slate-800 dark:bg-slate-900">
+    <Link  to={`/products/${product.slug}`}
+  className="card-hover block overflow-hidden rounded-4xl border border-white/60 bg-white/90 p-4 shadow-soft dark:border-slate-800 dark:bg-slate-900"
+>
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-100 to-amber-50 p-5 dark:from-brand-950/50 dark:to-slate-800">
         <button
           className={`absolute right-4 top-4 rounded-full p-2 ${wished ? "bg-rose-500 text-white" : "bg-white/80 text-slate-700"} dark:bg-slate-900/80 dark:text-slate-100`}
-          onClick={() => onToggleWishlist?.(product._id)}
+          onClick={(e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  onToggleWishlist?.(product._id);
+}}
           type="button"
         >
           <Heart className={`h-4 w-4 ${wished ? "fill-current" : ""}`} />
@@ -23,9 +29,9 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, wi
       <div className="mt-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <Link className="font-display text-lg font-bold text-slate-900 hover:text-brand-700 dark:text-white" to={`/products/${product.slug}`}>
+            <p className="font-display text-lg font-bold text-slate-900 hover:text-brand-700 dark:text-white" >
               {product.name}
-            </Link>
+            </p>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{product.category?.name} · {product.unit}</p>
           </div>
           {product.discountPrice && (
@@ -40,13 +46,20 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, wi
             <p className="text-lg font-bold text-slate-900 dark:text-white">{currency(product.discountPrice || product.price)}</p>
             {product.discountPrice && <p className="text-sm text-slate-400 line-through">{currency(product.price)}</p>}
           </div>
-          <Button className="rounded-full px-4 py-2" onClick={() => onAddToCart(product._id)}>
+          <Button
+  className="rounded-full px-4 py-2"
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onAddToCart(product._id);
+  }}
+>
             <ShoppingBasket className="h-4 w-4" />
             Add
           </Button>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 

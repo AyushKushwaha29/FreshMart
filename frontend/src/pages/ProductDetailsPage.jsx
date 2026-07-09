@@ -11,6 +11,9 @@ import api, { getErrorMessage } from "../services/api";
 import { currency } from "../utils/formatters";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+// import ProductImageGallery from "../components/products/ProductImageGallery";
 
 export default function ProductDetailsPage() {
   const { slug } = useParams();
@@ -21,7 +24,11 @@ export default function ProductDetailsPage() {
   const [loading, setLoading] = useState(true);
   const { isAuthenticated } = useAuth();
   const { addToCart } = useCart();
+  const [activeImage, setActiveImage] = useState(0);
 
+useEffect(() => {
+  setActiveImage(0);
+}, [product]);
   useEffect(() => {
     const loadProduct = async () => {
       setLoading(true);
@@ -31,7 +38,6 @@ export default function ProductDetailsPage() {
         if (isAuthenticated) {
           requests.push(api.get("/wishlist"));
         }
-
         const [productResponse, wishlistResponse] = await Promise.all(requests);
         setProduct(productResponse.data.data.product);
         setRelatedProducts(productResponse.data.data.relatedProducts);
@@ -45,7 +51,6 @@ export default function ProductDetailsPage() {
         setLoading(false);
       }
     };
-
     loadProduct();
   }, [slug, isAuthenticated]);
 
@@ -54,7 +59,6 @@ export default function ProductDetailsPage() {
       toast.error("Please log in to use your wishlist");
       return;
     }
-
     try {
       if (wishlistIds.includes(productId)) {
         await api.delete(`/wishlist/${productId}`);
@@ -67,7 +71,6 @@ export default function ProductDetailsPage() {
       toast.error(getErrorMessage(error));
     }
   };
-
   if (loading || !product) {
     return (
       <div className="section-space">
@@ -78,18 +81,92 @@ export default function ProductDetailsPage() {
       </div>
     );
   }
-
   return (
     <div className="section-space">
       <div className="page-shell space-y-10">
         <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
           <div className="glass-panel rounded-[2.5rem] p-6">
             <div className="rounded-[2rem] bg-gradient-to-br from-brand-100 to-amber-50 p-8 dark:from-brand-950/40 dark:to-slate-800">
-              <img
-                alt={product.name}
-                className="mx-auto h-[360px] w-full object-contain"
-                src={product.images?.[0]?.url || "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?auto=format&fit=crop&w=800&q=80"}
-              />
+             <div className="relative">
+  <AnimatePresence mode="wait">
+    <div className="group relative overflow-hidden rounded-2xl">
+  <motion.img
+    key={activeImage}
+    src={
+      product.images?.[activeImage]?.url ||
+      "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?auto=format&fit=crop&w=800&q=80"
+    }
+    alt={product.name}
+    className="mx-auto h-[380px] w-full object-contain transition-transform duration-500 hover:scale-125 cursor-zoom-in"
+    initial={{
+      opacity: 0,
+      scale: 0.92
+    }}
+    animate={{
+      opacity: 1,
+      scale: 1
+    }}
+    exit={{
+      opacity: 0,
+      scale: 1.08
+    }}
+    transition={{
+      duration: 0.35
+    }}
+  /></div>
+</AnimatePresence>
+<div className="mt-6 flex gap-3 justify-center flex-wrap">
+  {product.images?.map((image, index) => (
+    <button
+      key={index}
+      onClick={() => setActiveImage(index)}
+      className={`overflow-hidden rounded-xl border-2 transition
+      ${
+        activeImage === index
+? "border-brand-600 scale-105 shadow-lg"
+: "border-transparent hover:border-slate-300"
+      }`}
+    >
+      <img
+        src={image.url}
+        className="h-20 w-20 rounded-xl object-cover transition duration-300 hover:scale-110"
+      />
+    </button>
+      ))}
+   </div>
+
+  {/* Image Counter */}
+  <div className="absolute top-4 right-4 rounded-full bg-black/60 px-3 py-1 text-sm text-white">
+    {activeImage + 1} / {product.images.length}
+  </div>
+
+  {/* Left Button */}
+
+  {activeImage > 0 && (
+    <button
+      onClick={() => setActiveImage(activeImage - 1)}
+      className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 shadow-xl backdrop-blur transition hover:scale-110 hover:bg-white"
+    >
+      ◀
+    </button>
+  )}
+
+  {/* Right Button */}
+
+  {activeImage < product.images.length - 1 && (
+    <button
+      onClick={() => setActiveImage(activeImage + 1)}
+      className="absolute right-3 top-1/2 -translate-y-1/2 bg-white rounded-full h-10 w-10 shadow-lg"
+    >
+      ▶
+    </button>
+  )}
+
+</div>
+
+
+
+
             </div>
           </div>
           <div className="glass-panel rounded-[2.5rem] p-6">
