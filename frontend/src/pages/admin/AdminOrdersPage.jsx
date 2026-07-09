@@ -54,21 +54,54 @@ export default function AdminOrdersPage() {
       toast.error(getErrorMessage(error));
     }
   };
+
+
+
 useEffect(() => {
   socket.emit("join-admin");
 
-  const refreshOrders = () => {
-    loadOrders();
+  // New Order
+  const handleNewOrder = (order) => {
+    toast.success(`🛒 ${order.orderId} Received`);
+
+    setOrders((prev) => [order, ...prev]);
   };
 
-  socket.on("new-order", refreshOrders);
-  socket.on("admin-order-updated", refreshOrders);
+  // Status Changed
+  const handleStatusUpdate = (updatedOrder) => {
+    setOrders((prev) =>
+      prev.map((order) =>
+        order._id === updatedOrder._id ? updatedOrder : order
+      )
+    );
+
+    toast.success(
+      `📦 ${updatedOrder.orderId} → ${updatedOrder.status}`
+    );
+  };
+
+  socket.on("admin-order-created", handleNewOrder);
+
+  socket.on(
+    "admin-order-status-changed",
+    handleStatusUpdate
+  );
 
   return () => {
-    socket.off("new-order", refreshOrders);
-    socket.off("admin-order-updated", refreshOrders);
+    socket.off(
+      "admin-order-created",
+      handleNewOrder
+    );
+
+    socket.off(
+      "admin-order-status-changed",
+      handleStatusUpdate
+    );
   };
 }, []);
+
+
+
   const exportOrders = async () => {
     try {
       const response = await api.get("/admin/orders/export", {

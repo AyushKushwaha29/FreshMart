@@ -24,19 +24,51 @@ useEffect(() => {
 useEffect(() => {
   socket.emit("join-admin");
 
-  socket.on("new-order", (order) => {
-    toast.success(
-      `🛒 New Order\n${order.orderId}\n₹${order.amount}`
-    );
+  const handleNewOrder = (order) => {
+    toast.success(`🛒 New Order #${order.orderId}`);
 
-    loadDashboard();
-  });
+    setDashboard((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+
+        summary: {
+          ...prev.summary,
+
+          ordersCount: prev.summary.ordersCount + 1,
+
+          pendingOrders: prev.summary.pendingOrders + 1,
+
+          revenue:
+            prev.summary.revenue + order.pricing.total,
+
+          todayRevenue:
+            prev.summary.todayRevenue + order.pricing.total,
+
+          todayOrders:
+            prev.summary.todayOrders + 1,
+
+          averageOrderValue: Math.round(
+            (prev.summary.revenue + order.pricing.total) /
+              (prev.summary.ordersCount + 1)
+          )
+        },
+
+        recentOrders: [
+          order,
+          ...prev.recentOrders.slice(0, 4)
+        ]
+      };
+    });
+  };
+
+  socket.on("admin-order-created", handleNewOrder);
 
   return () => {
-    socket.off("new-order");
+    socket.off("admin-order-created", handleNewOrder);
   };
 }, []);
-
 
 
   return (

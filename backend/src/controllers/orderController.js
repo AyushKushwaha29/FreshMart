@@ -36,13 +36,17 @@ export const placeCodOrder = asyncHandler(async (req, res) => {
       pricing: payload.pricing
     }
   });
-getIO().to("admins").emit("new-order", {
-  orderId: order.orderId,
-  customer: req.user.name,
-  amount: order.pricing.total,
-  status: order.status,
-  createdAt: order.createdAt
-});
+// getIO().to("admins").emit("new-order", {
+//   orderId: order.orderId,
+//   customer: req.user.name,
+//   amount: order.pricing.total,
+//   status: order.status,
+//   createdAt: order.createdAt
+// });
+const populatedOrder = await Order.findById(order._id)
+  .populate("user", "name mobile email");
+
+getIO().to("admins").emit("admin-order-created", populatedOrder);
 
 
 
