@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import dns from "node:dns";
 
+
 (async () => {
   try {
     const result = await dns.lookup("smtp.gmail.com", {
