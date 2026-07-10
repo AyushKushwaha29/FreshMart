@@ -44,17 +44,31 @@ const allowedOrigins = (
   .split(",")
   .map((url) => url.trim());
 
-app.use(
+app.use((req, res, next) => {
+  console.log(
+    `${req.method} ${req.originalUrl} | Origin: ${req.headers.origin}`
+  );
+  next();
+});
+
+
+  app.use(
   cors({
     origin(origin, callback) {
-      if (!origin) return callback(null, true);
+      console.log("Incoming Origin:", origin);
+      console.log("Allowed Origins:", allowedOrigins);
 
-      if (allowedOrigins.includes(origin)) {
+      if (!origin) {
         return callback(null, true);
       }
 
-      console.warn(`❌ Blocked Origin: ${origin}`);
-return callback(new Error("CORS not allowed"));
+      if (allowedOrigins.includes(origin)) {
+        console.log("✅ Origin Allowed");
+        return callback(null, true);
+      }
+
+      console.log("❌ Origin Blocked:", origin);
+      return callback(new Error("CORS not allowed"));
     },
     credentials: true
   })
