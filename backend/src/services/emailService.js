@@ -1,21 +1,46 @@
 import nodemailer from "nodemailer";
 
+import nodemailer from "nodemailer";
+
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  requireTLS: true,
+
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
+  },
+
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 30000,
+
+  tls: {
+    rejectUnauthorized: false
   }
 });
 
-// ✅ Verify transporter
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("❌ Email Error:", error);
-  } else {
+(async () => {
+  try {
+    await transporter.verify();
     console.log("✅ Email Service Ready");
+  } catch (err) {
+    console.error("❌ Email Error:", err);
   }
-});
+})();
+
+// ✅ Verify transporter
+if (process.env.NODE_ENV !== "production") {
+  transporter.verify((error) => {
+    if (error) {
+      console.error(error);
+    } else {
+      console.log("✅ Email Service Ready");
+    }
+  });
+}
 
 export const sendOrderConfirmationEmail = async ({
   email,
