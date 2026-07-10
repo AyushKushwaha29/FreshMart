@@ -1,7 +1,10 @@
 import crypto from "crypto";
 
-const hashOtp = (mobile, otp) => {
-  return crypto.createHash("sha256").update(`${mobile}:${otp}:${process.env.JWT_SECRET}`).digest("hex");
+const hashOtp = (email, otp) => {
+  return crypto
+    .createHash("sha256")
+    .update(`${email.toLowerCase()}:${otp}:${process.env.JWT_SECRET}`)
+    .digest("hex");
 };
 
 export const issueOtp = async (user) => {
@@ -9,7 +12,7 @@ export const issueOtp = async (user) => {
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
   user.otp = {
-    codeHash: hashOtp(user.mobile, otp),
+    codeHash: hashOtp(user.email, otp),
     expiresAt,
     attempts: 0,
     lastRequestedAt: new Date()
@@ -29,7 +32,7 @@ export const verifyOtp = async (user, otp) => {
     return false;
   }
 
-  const isValid = hashOtp(user.mobile, otp) === user.otp.codeHash;
+  const isValid = hashOtp(user.email, otp) === user.otp.codeHash;
   user.otp.attempts = (user.otp.attempts || 0) + 1;
 
   if (isValid) {

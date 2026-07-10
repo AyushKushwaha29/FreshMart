@@ -22,17 +22,31 @@ export const requestOtp = asyncHandler(async (req, res) => {
     await user.save();
   }
 
-  const otp = await issueOtp(user);
-  await sendOtpEmail({
-  email,
-  otp,
-  name: user.name
-});
+ const otp = await issueOtp(user);
 
-  res.status(200).json({
-    success: true,
-    message: "OTP sent successfully",
-    });
+let emailSent = false;
+
+try {
+  await sendOtpEmail({
+    email,
+    otp,
+    name: user.name
+  });
+
+  emailSent = true;
+} catch (err) {
+  console.error("❌ Email sending failed:", err.message);
+}
+
+res.status(200).json({
+  success: true,
+  message: emailSent
+    ? "OTP sent successfully"
+    : "OTP generated but email could not be delivered",
+  data: {
+    emailSent
+  }
+});
 });
 
 export const verifyOtpAndLogin = asyncHandler(async (req, res) => {

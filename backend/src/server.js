@@ -5,7 +5,13 @@ import { initSocket } from "./socket.js";
 import app from "./app.js";
 import connectDB from "./config/db.js";
 import ensureAdminUser from "./utils/bootstrapAdmin.js";
+import dns from "dns";
 
+
+
+dns.lookup("smtp.gmail.com", { family: 4 }, (err, address) => {
+  console.log("DNS:", err, address);
+});
 
 
 console.log("Mongo URI:", process.env.MONGODB_URI);
