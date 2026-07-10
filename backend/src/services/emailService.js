@@ -1,6 +1,5 @@
 import nodemailer from "nodemailer";
-import dns from "dns";
-import dns from "node:dns/promises";
+import dns from "node:dns";
 
 (async () => {
   try {
