@@ -1,3 +1,4 @@
+console.log("✅ APP.JS VERSION 2 LOADED");
 import compression from "compression";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -22,7 +23,7 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 
 dotenv.config();
-
+console.log("CLIENT_URL =", process.env.CLIENT_URL);
 const app = express();
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
