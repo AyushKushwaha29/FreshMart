@@ -1,21 +1,4 @@
 import nodemailer from "nodemailer";
-import dns from "node:dns";
-
-
-(async () => {
-  try {
-    const result = await dns.lookup("smtp.gmail.com", {
-      family: 4,
-      all: true
-    });
-
-    console.log("SMTP DNS:", result);
-  } catch (err) {
-    console.error("DNS ERROR:", err);
-  }
-})();
-
-dns.setDefaultResultOrder("ipv4first");
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
