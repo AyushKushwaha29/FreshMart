@@ -1,7 +1,5 @@
 import nodemailer from "nodemailer";
 
-import nodemailer from "nodemailer";
-
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
@@ -30,7 +28,6 @@ const transporter = nodemailer.createTransport({
     console.error("❌ Email Error:", err);
   }
 })();
-
 // ✅ Verify transporter
 if (process.env.NODE_ENV !== "production") {
   transporter.verify((error) => {
