@@ -24,39 +24,98 @@ import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 dotenv.config();
 
 const app = express();
+app.disable("x-powered-by");
+app.set("trust proxy", 1);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// app.use(
+//   cors({
+//     origin: process.env.CLIENT_URL?.split(",").map((origin) => origin.trim()) || ["http://localhost:5173"],
+//     credentials: true
+//   })
+// );
+
+const allowedOrigins = (
+  process.env.CLIENT_URL ||
+  "http://localhost:5173"
+)
+  .split(",")
+  .map((url) => url.trim());
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL?.split(",").map((origin) => origin.trim()) || ["http://localhost:5173"],
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.warn(`❌ Blocked Origin: ${origin}`);
+return callback(new Error("CORS not allowed"));
+    },
     credentials: true
   })
 );
+
 app.use(
   helmet({
-    crossOriginResourcePolicy: false
+    crossOriginResourcePolicy: false,
+    crossOriginEmbedderPolicy: false
   })
 );
-app.use(generalLimiter);
-app.use(compression());
-app.use(express.json({ limit: "2mb" }));
-app.use(express.urlencoded({ extended: true }));
-app.use(mongoSanitize());
-app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
+if (process.env.NODE_ENV !== "test") {
+  app.use(generalLimiter);
+  app.use("/api/auth/request-otp", otpLimiter);
+}
+
+
+app.use(compression());
+app.use(
+  express.json({
+    limit: process.env.JSON_LIMIT || "2mb"
+  })
+);
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: process.env.JSON_LIMIT || "2mb"
+  })
+);
+
+app.use(mongoSanitize());
+if (process.env.NODE_ENV !== "test") {
+  app.use(
+    morgan(
+      process.env.NODE_ENV === "production"
+        ? "combined"
+        : "dev"
+    )
+  );
+}
 app.use("/invoices", express.static(path.resolve(__dirname, "../tmp/invoices")));
 app.use("/uploads", express.static(path.resolve(__dirname, "../tmp/uploads")));
 app.use("/docs", express.static(path.resolve(__dirname, "../docs")));
 
 app.get("/health", (_req, res) => {
-  res.status(200).json({
+  const response = {
     success: true,
     message: "FreshMart API is running"
-  });
+  };
+
+  if (process.env.NODE_ENV !== "production") {
+    response.environment = process.env.NODE_ENV;
+    response.uptime = process.uptime();
+    response.timestamp = new Date().toISOString();
+    response.version = process.env.npm_package_version;
+  }
+
+  res.status(200).json(response);
 });
 
-app.use("/api/auth/request-otp", otpLimiter);
+
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/products", productRoutes);
