@@ -4,6 +4,7 @@ import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import api, { getErrorMessage } from "../../services/api";
 import { currency } from "../../utils/formatters";
+import { socket } from "../../services/socket";
 
 const initialForm = {
   name: "",
@@ -108,6 +109,32 @@ export default function AdminProductsPage() {
       toast.error(getErrorMessage(error));
     }
   };
+
+  useEffect(() => {
+  socket.emit("join-admin");
+
+  const handleInventoryUpdate = (updated) => {
+    setProducts((prev) =>
+      prev.map((product) =>
+        product._id === updated.productId
+          ? {
+              ...product,
+              stock: updated.stock,
+              availability: updated.availability
+            }
+          : product
+      )
+    );
+
+    toast.success("📦 Inventory Updated");
+  };
+
+  socket.on("inventory-updated", handleInventoryUpdate);
+
+  return () => {
+    socket.off("inventory-updated", handleInventoryUpdate);
+  };
+}, []);
 
   return (
     <div className="space-y-6">

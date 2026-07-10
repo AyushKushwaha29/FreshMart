@@ -11,7 +11,7 @@ import { getValidCoupon } from "./couponService.js";
 import { generateInvoice } from "./invoiceService.js";
 import { sendOrderConfirmationSms } from "./smsService.js";
 import { sendOrderConfirmationEmail } from "./emailService.js";
-
+import { getIO } from "../socket.js";
 
 const assertInventory = async (items) => {
   const products = await Product.find({
@@ -49,6 +49,12 @@ const reserveInventory = async (items) => {
         product.availability = false;
       }
       await product.save();
+            // 🔥 Realtime Inventory Update
+      getIO().emit("inventory-updated", {
+        productId: product._id.toString(),
+        stock: product.stock,
+        availability: product.availability
+      });
     })
   );
 };

@@ -9,6 +9,7 @@ import Input from "../components/ui/Input";
 import api, { getErrorMessage } from "../services/api";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { socket } from "../services/socket";
 
 export default function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -87,6 +88,29 @@ export default function ProductsPage() {
       toast.error(getErrorMessage(error));
     }
   };
+  
+  useEffect(() => {
+  const handleInventoryUpdate = (updated) => {
+    setProducts((prev) =>
+      prev.map((product) =>
+        product._id === updated.productId
+          ? {
+              ...product,
+              stock: updated.stock,
+              availability: updated.availability
+            }
+          : product
+      )
+    );
+  };
+
+  socket.on("inventory-updated", handleInventoryUpdate);
+
+  return () => {
+    socket.off("inventory-updated", handleInventoryUpdate);
+  };
+}, []);
+
 
   return (
     <div className="section-space">
